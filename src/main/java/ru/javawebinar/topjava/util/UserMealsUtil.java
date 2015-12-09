@@ -2,12 +2,13 @@ package ru.javawebinar.topjava.util;
 
 import ru.javawebinar.topjava.model.UserMeal;
 import ru.javawebinar.topjava.model.UserMealWithExceed;
+import ru.javawebinar.topjava.model.UserMealPerDay;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * GKislin
@@ -30,6 +31,59 @@ public class UserMealsUtil {
 
     public static List<UserMealWithExceed>  getFilteredMealsWithExceeded(List<UserMeal> mealList, LocalTime startTime, LocalTime endTime, int caloriesPerDay) {
         // TODO return filtered list with correctly exceeded field
-        return null;
+
+        Map<LocalDate, UserMealPerDay> mealsPerDayMap = new HashMap<>();
+
+        LocalDate mealDate;
+
+        UserMealPerDay mealPerDay;
+
+        for (UserMeal userMeal : mealList) {
+
+            mealDate = userMeal.getDateTime().toLocalDate();
+
+            if (mealsPerDayMap.containsKey(mealDate)) {
+
+                mealsPerDayMap.get(mealDate).addMeal(userMeal);
+
+            } else {
+
+                mealPerDay = new UserMealPerDay();
+
+                mealPerDay.addMeal(userMeal);
+
+                mealsPerDayMap.put(mealDate, mealPerDay);
+
+            }
+
+        }
+
+        List<UserMealWithExceed> userMealWithExceedList = new ArrayList<>();
+
+        for(Map.Entry<LocalDate, UserMealPerDay> entry : mealsPerDayMap.entrySet()) {
+
+            int actualCalories = entry.getValue().getTotalCalories();
+
+            boolean exceed = false;
+
+            if(actualCalories > caloriesPerDay) {
+
+                exceed = true;
+
+            }
+
+            List<UserMeal> filteredMealList = entry.getValue().getMeal(startTime, endTime);
+
+            for(UserMeal userMeal : filteredMealList) {
+
+                userMealWithExceedList.add(new UserMealWithExceed(userMeal.getDateTime(),userMeal.getDescription()
+                                                                    ,userMeal.getCalories(), exceed));
+
+            }
+        }
+
+        return userMealWithExceedList;
+
     }
+
 }
